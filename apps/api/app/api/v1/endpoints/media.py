@@ -62,12 +62,11 @@ class TransformationRequest(BaseModel):
 @router.get("", response_model=MediaListResponse)
 async def list_media(
     resource_type: str = Query("video", pattern="^(video|image|raw)$"),
-    folder: str = Query("videogen/"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     current_user: dict = Depends(get_current_user),
 ):
-    prefix = f"{folder}{current_user['id']}/"
+    prefix = f"videogen/{current_user['id']}/"
     max_results = page_size
 
     resources = cloudinary_service.list_resources(
@@ -106,11 +105,10 @@ async def list_media(
 @router.post("/upload", response_model=UploadResponse)
 async def upload_media(
     file: UploadFile = File(...),
-    folder: str = Form("videogen/uploads"),
     resource_type: str = Form("video"),
     current_user: dict = Depends(get_current_user),
 ):
-    user_folder = f"{folder}/{current_user['id']}"
+    user_folder = f"videogen/{current_user['id']}/uploads"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
         content = await file.read()
@@ -252,11 +250,10 @@ async def delete_media(
 
 @router.post("/signed-upload-url")
 async def get_signed_upload_url(
-    folder: str = Form("videogen/uploads"),
     resource_type: str = Form("video"),
     current_user: dict = Depends(get_current_user),
 ):
-    user_folder = f"{folder}/{current_user['id']}"
+    user_folder = f"videogen/{current_user['id']}/uploads"
 
     import cloudinary.utils
     params = {

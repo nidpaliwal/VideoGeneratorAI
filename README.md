@@ -2,9 +2,7 @@
 
 An MVP web app that orchestrates existing AI APIs to generate vertical short-form videos (9:16, 15-90s) from text prompts/scripts.
 
-## Track: AI Video Generation with Cloudinary
-
-**Track:** AI Video Generation & Media Management
+## Track: Track 1
 
 **Problem:** Creating vertical short-form videos (YouTube Shorts, Instagram Reels, TikTok) is time-consuming and requires multiple tools: script writing, voiceover generation, visual sourcing, caption creation, and video assembly. Existing solutions are either too complex, lack automation, or don't handle the full pipeline. Additionally, free-tier users need watermarked exports without manual video editing, and all users need reliable, optimized video delivery with automatic format/quality selection.
 
@@ -210,6 +208,8 @@ npm run build            # Build all packages
 ```bash
 npm run docker:up
 npm run db:generate && npm run db:migrate && npm run db:seed
+# Install Python deps
+cd apps/api && pip install -r requirements.txt && cd ../..
 npm run dev
 ```
 
@@ -239,11 +239,13 @@ npm run dev
 - Click "Clear Transforms" to reset
 
 ### 6. Test Free-Plan Watermark Export
-- Create a project and render a video (or use the render endpoint)
+- Upload a video via Media Library (or use a rendered video if you have one)
 - On export with `includeWatermark: true` and FREE plan:
   - Backend generates Cloudinary URL with text overlay transformation
   - No re-encoding — transformation applied at CDN edge
 - Verify the download URL contains transformation parameters, not `?watermark=1`
+
+> **Note:** The full script-to-video render pipeline requires valid API keys for OpenAI, ElevenLabs/Google TTS, Pexels/Pixabay, and FFmpeg. The visual search endpoints return placeholder URLs. For demo purposes, use the Media Library upload + transformations path above.
 
 ### 7. Test Direct Upload (Signed URL)
 ```bash
@@ -251,14 +253,14 @@ npm run dev
 curl -X POST http://localhost:8000/api/v1/media/signed-upload-url \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"folder": "videogen/uploads", "resource_type": "video"}'
+  -d '{"resource_type": "video"}'
 
 # Use returned upload_url and params to upload directly to Cloudinary
 ```
 
 ### 8. Verify Cloudinary Dashboard
 - Log into Cloudinary Console → Media Library
-- Check `videogen/videos/{user_id}/` and `videogen/thumbnails/{user_id}/` folders
+- Check `videogen/{user_id}/uploads/`, `videogen/{user_id}/videos/`, `videogen/{user_id}/thumbnails/` folders
 - Verify eager transformations generated (9:16 crop, auto quality)
 - Check delivery URLs in browser network tab
 

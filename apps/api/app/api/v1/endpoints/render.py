@@ -122,7 +122,6 @@ async def process_render_job(job_id: str):
                 "fileSize": file_size,
                 "costIncurred": 0.025,
                 "completedAt": "now()",
-                "errorMessage": upload_result["video_public_id"],
             },
         )
 
