@@ -358,7 +358,7 @@ function MediaCard({
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate">{item.public_id.split("/").pop()}</p>
             <p className="text-xs text-muted-foreground">
-              {item.format.toUpperCase()} • {item.width}×{item.height}
+              {item.format ? item.format.toUpperCase() : "MEDIA"} • {item.width}×{item.height}
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -463,7 +463,7 @@ function MediaModal({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Format</p>
-              <p className="font-medium">{media.format.toUpperCase()}</p>
+              <p className="font-medium">{media.format ? media.format.toUpperCase() : "IMAGE"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Dimensions</p>
