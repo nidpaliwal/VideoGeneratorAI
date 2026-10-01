@@ -109,8 +109,7 @@ async def upload_media(
     resource_type: str = Form("video"),
     current_user: dict = Depends(get_current_user),
 ):
-    ext = os.path.splitext(file.filename)[1].lstrip(".")
-    public_id = f"videogen/{current_user['id']}/uploads/{uuid.uuid4().hex}.{ext}"
+    public_id = f"videogen/{current_user['id']}/uploads/{uuid.uuid4().hex}"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
         content = await file.read()
