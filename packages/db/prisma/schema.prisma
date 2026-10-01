@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserPlan {
+  FREE
+  PRO
+  CREATOR
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ProjectStatus {
+  DRAFT
+  SCRIPT_READY
+  VOICEOVER_READY
+  VISUALS_READY
+  CAPTIONS_READY
+  RENDERING
+  COMPLETE
+  FAILED
+}
+
+enum RenderJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETE
+  FAILED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String?
+  name              String?
+  image             String?
+  plan              UserPlan           @default(FREE)
+  role              UserRole           @default(USER)
+  creditsRemaining  Int                @default(3)
+  creditsUsed       Int                @default(0)
+  stripeCustomerId  String?            @unique
+  stripeSubscriptionId String?         @unique
+  googleId          String?            @unique
+  emailVerified     DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  projects          Project[]
+  renderJobs        RenderJob[]
+  subscription      Subscription?
+  usageLogs         UsageLog[]
+
+  @@index([email])
+  @@index([stripeCustomerId])
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String?
+  scriptJson    Json
+  status        ProjectStatus @default(DRAFT)
+  duration      Int?          // estimated total duration in seconds
+  thumbnailUrl  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  completedAt   DateTime?
+
+  segments      Segment[]
+  renderJobs    RenderJob[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model Segment {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  orderIndex      Int
+  text            String
+  visualKeywords  String[]
+  durationEstimate Float?  // estimated duration in seconds
+  voiceoverUrl    String?
+  voiceoverDuration Float?
+  visualUrl       String?
+  visualDuration  Float?
+  visualProvider  String?  // pexels, pixabay, runway, luma, etc.
+  captionStart    Float?   // start time in final video
+  captionEnd      Float?   // end time in final video
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId, orderIndex])
+  @@unique([projectId, orderIndex])
+}
+
+model RenderJob {
+  id            String           @id @default(cuid())
+  projectId     String
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        RenderJobStatus  @default(PENDING)
+  priority      Int              @default(0) // higher = more priority
+  outputVideoUrl String?
+  thumbnailUrl  String?
+  duration      Int?             // actual duration in seconds
+  fileSize      BigInt?          // bytes
+  costIncurred  Decimal          @default(0) @db.Decimal(10, 4)
+  errorMessage  String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([projectId])
+  @@index([status, priority, createdAt])
+}
+
+model Subscription {
+  id                   String               @id @default(cuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String               @unique
+  stripePriceId        String
+  stripeCurrentPeriodEnd DateTime
+  status               SubscriptionStatus
+  cancelAtPeriodEnd    Boolean              @default(false)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([stripeSubscriptionId])
+}
+
+model UsageLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // script_generate, tts_generate, visual_search, render, export
+  creditsCost Int      @default(1)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action])
+}
+
+model ApiUsage {
+  id          String   @id @default(cuid())
+  provider    String   // openai, elevenlabs, pexels, pixabay, runway, whisper
+  endpoint    String
+  calls       Int      @default(1)
+  tokens      Int?
+  costUsd     Decimal  @default(0) @db.Decimal(10, 6)
+  date        DateTime @default(now()) @db.Date
+
+  @@unique([provider, endpoint, date])
+  @@index([date])
+}
