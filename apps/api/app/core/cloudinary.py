@@ -22,19 +22,20 @@ class CloudinaryService:
     def upload_video(
         file_path: str,
         public_id: Optional[str] = None,
-        folder: str = "videogen/videos",
+        folder: Optional[str] = "videogen/videos",
         transformations: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         upload_params = {
             "resource_type": "video",
-            "folder": folder,
             "use_filename": True,
             "unique_filename": True,
             "overwrite": False,
         }
         if public_id:
             upload_params["public_id"] = public_id
+        elif folder:
+            upload_params["folder"] = folder
         if transformations:
             upload_params["eager"] = transformations
             upload_params["eager_async"] = True
@@ -49,18 +50,19 @@ class CloudinaryService:
     def upload_image(
         file_path: str,
         public_id: Optional[str] = None,
-        folder: str = "videogen/images",
+        folder: Optional[str] = "videogen/images",
         **kwargs,
     ) -> Dict[str, Any]:
         upload_params = {
             "resource_type": "image",
-            "folder": folder,
             "use_filename": True,
             "unique_filename": True,
             "overwrite": False,
         }
         if public_id:
             upload_params["public_id"] = public_id
+        elif folder:
+            upload_params["folder"] = folder
         upload_params.update(kwargs)
 
         logger.info("Uploading image to Cloudinary", public_id=public_id, folder=folder)
@@ -72,18 +74,19 @@ class CloudinaryService:
     def upload_audio(
         file_path: str,
         public_id: Optional[str] = None,
-        folder: str = "videogen/audio",
+        folder: Optional[str] = "videogen/audio",
         **kwargs,
     ) -> Dict[str, Any]:
         upload_params = {
             "resource_type": "video",
-            "folder": folder,
             "use_filename": True,
             "unique_filename": True,
             "overwrite": False,
         }
         if public_id:
             upload_params["public_id"] = public_id
+        elif folder:
+            upload_params["folder"] = folder
         upload_params.update(kwargs)
 
         logger.info("Uploading audio to Cloudinary", public_id=public_id, folder=folder)

@@ -225,7 +225,7 @@ async def render_video(job_id: str, project) -> tuple[str, str, int, int]:
 
 
 async def upload_to_cloudinary(job_id: str, video_path: str, thumbnail_path: str, user_id: str) -> dict:
-    video_public_id = f"videogen/videos/{user_id}/{job_id}"
+    video_public_id = f"videogen/{user_id}/videos/{job_id}"
 
     video_result = cloudinary_service.upload_video(
         video_path,
@@ -237,7 +237,7 @@ async def upload_to_cloudinary(job_id: str, video_path: str, thumbnail_path: str
         eager_async=True,
     )
 
-    thumbnail_public_id = f"videogen/thumbnails/{user_id}/{job_id}"
+    thumbnail_public_id = f"videogen/{user_id}/thumbnails/{job_id}"
     thumb_result = cloudinary_service.upload_image(
         thumbnail_path,
         public_id=thumbnail_public_id,
@@ -310,7 +310,7 @@ async def export_video(
     include_watermark = data.includeWatermark and current_user["plan"] == "FREE"
 
     if include_watermark:
-        video_public_id = f"videogen/videos/{current_user['id']}/{latest_job.id}"
+        video_public_id = f"videogen/{current_user['id']}/videos/{latest_job.id}"
         download_url = cloudinary_service.get_watermarked_video_url(video_public_id)
     else:
         download_url = latest_job.outputVideoUrl

@@ -6,6 +6,7 @@ import tempfile
 import os
 import cloudinary
 import cloudinary.uploader
+import uuid
 
 from app.core.database import prisma
 from app.api.v1.endpoints.auth import get_current_user
@@ -108,7 +109,8 @@ async def upload_media(
     resource_type: str = Form("video"),
     current_user: dict = Depends(get_current_user),
 ):
-    user_folder = f"videogen/{current_user['id']}/uploads"
+    ext = os.path.splitext(file.filename)[1].lstrip(".")
+    public_id = f"videogen/{current_user['id']}/uploads/{uuid.uuid4().hex}.{ext}"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
         content = await file.read()
@@ -117,11 +119,11 @@ async def upload_media(
 
     try:
         if resource_type == "video":
-            result = cloudinary_service.upload_video(tmp_path, folder=user_folder)
+            result = cloudinary_service.upload_video(tmp_path, public_id=public_id)
         elif resource_type == "image":
-            result = cloudinary_service.upload_image(tmp_path, folder=user_folder)
+            result = cloudinary_service.upload_image(tmp_path, public_id=public_id)
         else:
-            result = cloudinary.uploader.upload(tmp_path, resource_type=resource_type, folder=user_folder)
+            result = cloudinary.uploader.upload(tmp_path, resource_type=resource_type, public_id=public_id)
     finally:
         try:
             os.remove(tmp_path)
@@ -253,11 +255,12 @@ async def get_signed_upload_url(
     resource_type: str = Form("video"),
     current_user: dict = Depends(get_current_user),
 ):
-    user_folder = f"videogen/{current_user['id']}/uploads"
+    import uuid
+    public_id = f"videogen/{current_user['id']}/uploads/{uuid.uuid4().hex}"
 
     import cloudinary.utils
     params = {
-        "folder": user_folder,
+        "public_id": public_id,
         "resource_type": resource_type,
         "timestamp": int(__import__("time").time()),
     }
