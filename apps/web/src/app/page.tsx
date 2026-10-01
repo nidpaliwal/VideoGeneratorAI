@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Video, Sparkles, Zap, Shield, Users } from 'lucide-react'
+import { ArrowRight, Video, Sparkles, Zap, Shield, Users, Film } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -21,6 +21,9 @@ export default function HomePage() {
             </Link>
             <Link href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               How it Works
+            </Link>
+            <Link href="/media" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Media Library
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -322,12 +325,20 @@ export default function HomePage() {
           <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
             Join 1000+ creators making faceless shorts at scale. Your first 3 videos are free — no credit card needed.
           </p>
-          <Link href="/auth/register">
-            <Button size="lg" variant="secondary" className="w-full sm:w-auto gap-2" style={{ padding: '1rem 2rem' }}>
-              Start Creating Free
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth/register">
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto gap-2" style={{ padding: '1rem 2rem' }}>
+                Start Creating Free
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/media">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2" style={{ padding: '1rem 2rem', borderColor: "rgba(255,255,255,0.3)", color: "white" }}>
+                <Film className="w-4 h-4" />
+                Try Media Library
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -349,6 +360,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="#features" className="hover:text-foreground transition-colors">Features</Link></li>
                 <li><Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><Link href="/media" className="hover:text-foreground transition-colors">Media Library</Link></li>
                 <li><Link href="/docs" className="hover:text-foreground transition-colors">Documentation</Link></li>
                 <li><Link href="/api-docs" className="hover:text-foreground transition-colors">API Reference</Link></li>
               </ul>

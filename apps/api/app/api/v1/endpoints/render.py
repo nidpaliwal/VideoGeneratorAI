@@ -7,6 +7,7 @@ import os
 import tempfile
 import json
 import ffmpeg
+from datetime import datetime, timedelta, timezone
 
 from app.core.database import prisma
 from app.api.v1.endpoints.auth import get_current_user
@@ -43,6 +44,7 @@ class RenderJobResponse(BaseModel):
     startedAt: Optional[str]
     completedAt: Optional[str]
     createdAt: str
+    cloudinaryPublicId: Optional[str] = None
 
 
 @router.post("/projects/{project_id}/render", response_model=RenderJobResponse)
@@ -120,6 +122,7 @@ async def process_render_job(job_id: str):
                 "fileSize": file_size,
                 "costIncurred": 0.025,
                 "completedAt": "now()",
+                "errorMessage": upload_result["video_public_id"],
             },
         )
 
@@ -228,7 +231,6 @@ async def upload_to_cloudinary(job_id: str, video_path: str, thumbnail_path: str
     video_result = cloudinary_service.upload_video(
         video_path,
         public_id=video_public_id,
-        folder="videogen/videos",
         eager=[
             {"width": 1080, "height": 1920, "crop": "fill", "gravity": "auto", "aspect_ratio": "9:16"},
             {"quality": "auto", "fetch_format": "auto"},
@@ -240,7 +242,6 @@ async def upload_to_cloudinary(job_id: str, video_path: str, thumbnail_path: str
     thumb_result = cloudinary_service.upload_image(
         thumbnail_path,
         public_id=thumbnail_public_id,
-        folder="videogen/thumbnails",
     )
 
     video_url = cloudinary_service.get_video_url(video_result["public_id"])
@@ -310,13 +311,14 @@ async def export_video(
     include_watermark = data.includeWatermark and current_user["plan"] == "FREE"
 
     if include_watermark:
-        video_public_id = latest_job.outputVideoUrl.split("/")[-1].split(".")[0]
-        full_public_id = f"videogen/videos/{current_user['id']}/{video_public_id}"
-        download_url = cloudinary_service.get_watermarked_video_url(full_public_id)
+        video_public_id = f"videogen/videos/{current_user['id']}/{latest_job.id}"
+        download_url = cloudinary_service.get_watermarked_video_url(video_public_id)
     else:
         download_url = latest_job.outputVideoUrl
 
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
     return ExportResponse(
         downloadUrl=download_url,
-        expiresAt="2024-12-31T23:59:59Z",
+        expiresAt=expires_at.isoformat(),
     )

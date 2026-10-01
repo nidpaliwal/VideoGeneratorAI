@@ -169,6 +169,38 @@ async def transform_media(
     )
 
 
+@router.get("/preview/{public_id:path}")
+async def preview_media(
+    public_id: str,
+    resource_type: str = Query("video", pattern="^(video|image|raw)$"),
+    transformation: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user),
+):
+    user_prefix = f"videogen/{current_user['id']}/"
+    if not public_id.startswith(user_prefix):
+        public_id = f"{user_prefix}{public_id}"
+
+    transformations = None
+    if transformation:
+        import json
+        try:
+            transformations = json.loads(transformation)
+        except Exception:
+            pass
+
+    url = cloudinary_service.get_delivery_url(
+        public_id,
+        resource_type=resource_type,
+        transformations=transformations,
+    )
+
+    return {
+        "preview_url": url,
+        "public_id": public_id,
+        "transformations_applied": transformations,
+    }
+
+
 @router.get("/{public_id:path}")
 async def get_media(
     public_id: str,
@@ -216,38 +248,6 @@ async def delete_media(
         raise HTTPException(status_code=400, detail="Failed to delete media")
 
     return {"message": "Media deleted successfully", "public_id": public_id}
-
-
-@router.get("/preview/{public_id:path}")
-async def preview_media(
-    public_id: str,
-    resource_type: str = Query("video", pattern="^(video|image|raw)$"),
-    transformation: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
-):
-    user_prefix = f"videogen/{current_user['id']}/"
-    if not public_id.startswith(user_prefix):
-        public_id = f"{user_prefix}{public_id}"
-
-    transformations = None
-    if transformation:
-        import json
-        try:
-            transformations = json.loads(transformation)
-        except Exception:
-            pass
-
-    url = cloudinary_service.get_delivery_url(
-        public_id,
-        resource_type=resource_type,
-        transformations=transformations,
-    )
-
-    return {
-        "preview_url": url,
-        "public_id": public_id,
-        "transformations_applied": transformations,
-    }
 
 
 @router.post("/signed-upload-url")
